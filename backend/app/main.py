@@ -22,13 +22,24 @@ app = FastAPI(
 )
 
 # ---------------------------------------------------------------------------
-# CORS — allow the React frontend (and any localhost port during development)
+# CORS — allow the React frontend origins
 # ---------------------------------------------------------------------------
-FRONTEND_ORIGIN: str = os.getenv("FRONTEND_ORIGIN", "http://localhost:5173")
+origins = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "https://similar-question-finder.vercel.app",
+    "https://similar-question-finder-nj3tn8v0h-varatha.vercel.app",
+    "https://similar-question-finder-4qrck9wpe-varatha.vercel.app",
+]
+
+# Also include any origin set via environment variable (e.g. future deployments)
+extra_origin = os.getenv("FRONTEND_ORIGIN", "")
+if extra_origin and extra_origin not in origins:
+    origins.append(extra_origin)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_ORIGIN, "http://localhost:3000", "http://localhost:5174"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
