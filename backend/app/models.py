@@ -35,6 +35,10 @@ class AuthResponse(BaseModel):
 
 class QuestionRequest(BaseModel):
     text: str = Field(..., min_length=5, max_length=2000)
+    # Optional user-provided answer — stored alongside the question so that
+    # future similar questions can surface it as a "Suggested Answer".
+    # Not shown in the submission UI; available via API for future admin tools.
+    answer: Optional[str] = Field(default=None, max_length=5000)
 
 
 class SimilarQuestion(BaseModel):
@@ -51,6 +55,9 @@ class QuestionResponse(BaseModel):
     tag_confidence: float
     similar_questions: List[SimilarQuestion]
     created_at: str
+    # ── Suggested Answer fields (None when no similar question has an answer) ──
+    suggested_answer: Optional[str] = None   # answer from the most similar question
+    best_similarity: float = 0.0             # similarity score of the top match
 
 
 class QuestionListItem(BaseModel):
@@ -60,3 +67,6 @@ class QuestionListItem(BaseModel):
     tag_confidence: float
     similar_count: int
     created_at: str
+    # ── Suggested Answer (persisted when the question was first submitted) ──
+    suggested_answer: Optional[str] = None
+    best_similarity: float = 0.0
