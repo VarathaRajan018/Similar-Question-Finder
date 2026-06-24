@@ -1,35 +1,34 @@
 /**
  * theme.js — Central design-token file for Similar Question Finder.
  *
- * Accent choice: Navy-indigo (#1E3A5F)
- * Rationale: deep, authoritative, calm — fits an academic/EdTech product
- * without feeling corporate-cold. Works on white backgrounds without any
- * gradient tricks.
+ * Accent choice: Forest Green (#1B4332)
+ * Rationale: calming, trustworthy, academic — green has strong associations
+ * with growth and learning, fitting perfectly for an EdTech product.
  *
  * Usage:
- *   import { THEME, TAG_COLORS } from "../theme";
+ *   import { THEME, TAG_COLORS, tagColor } from "../theme";
  *   style={{ color: THEME.primary }}
  */
 
 export const THEME = {
   // ── Backgrounds ──────────────────────────────────────────────
-  bg:          "#F7F8FA",   // page background
+  bg:          "#FFFFFF",   // page background — clean white
   surface:     "#FFFFFF",   // card / panel background
-  surface2:    "#F0F2F5",   // subtle inner surface (textarea bg, etc.)
+  surface2:    "#F8FAF8",   // subtle section background
 
   // ── Borders ───────────────────────────────────────────────────
-  border:      "#E5E7EB",   // standard border
-  borderFocus: "#1E3A5F",   // focused input border
+  border:      "#D8E2DC",   // standard border — soft green-grey
+  borderFocus: "#1B4332",   // focused input border — forest green
 
   // ── Text ──────────────────────────────────────────────────────
-  text:        "#1A1A1A",   // primary text
+  text:        "#1F2937",   // primary text — dark charcoal
   textMuted:   "#6B7280",   // secondary / placeholder text
   textOnAccent:"#FFFFFF",   // text on filled accent backgrounds
 
-  // ── Accent (single colour — navy-indigo) ──────────────────────
-  primary:      "#1E3A5F",  // buttons, active states, links
-  primaryHover: "#162E4D",  // slightly darker for hover
-  primaryLight: "#EEF2F8",  // very light tint for tag badges
+  // ── Accent (Forest Green) ─────────────────────────────────────
+  primary:      "#1B4332",  // forest green — buttons, active states
+  primaryHover: "#2D6A4F",  // slightly lighter green for hover
+  primaryLight: "#D8F3DC",  // very light green tint for badges / chips
 
   // ── Semantic ──────────────────────────────────────────────────
   danger:       "#DC2626",
@@ -37,11 +36,12 @@ export const THEME = {
   dangerBorder: "#FECACA",
 
   // ── Misc ──────────────────────────────────────────────────────
-  radius:    "8px",
-  radiusLg:  "12px",
+  radius:    "10px",
+  radiusLg:  "14px",
   radiusPill:"999px",
-  shadow:    "0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.06)",
-  shadowSm:  "0 1px 2px rgba(0,0,0,0.06)",
+  shadow:    "0 2px 8px rgba(27,67,50,0.08), 0 1px 3px rgba(27,67,50,0.06)",
+  shadowMd:  "0 4px 16px rgba(27,67,50,0.10), 0 2px 6px rgba(27,67,50,0.06)",
+  shadowSm:  "0 1px 3px rgba(27,67,50,0.06)",
   transition:"180ms ease",
 };
 
@@ -90,9 +90,9 @@ export const TAG_COLORS = {
   },
   // fallback
   _default: {
-    bg:   "#F3F4F6",
-    text: "#374151",
-    bar:  "#9CA3AF",
+    bg:   "#E6F4EA",
+    text: "#1B4332",
+    bar:  "#2D6A4F",
   },
 };
 
