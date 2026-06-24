@@ -363,17 +363,6 @@ a:hover { text-decoration: underline; }
   align-items: center;
 }
 
-/* Lock icon on the left */
-.pw-icon-left {
-  position: absolute;
-  left: 1rem;
-  color: #94A3B8;
-  display: flex;
-  align-items: center;
-  pointer-events: none;
-  z-index: 1;
-}
-
 /* The actual <input> inside PasswordInput */
 .pw-input {
   height: 58px;
@@ -381,7 +370,7 @@ a:hover { text-decoration: underline; }
   background: var(--color-surface-2);
   border: 1px solid var(--color-border);
   border-radius: 14px;
-  padding: 0 3rem 0 2.75rem;   /* left: lock icon | right: eye btn */
+  padding: 0 3rem 0 1rem;   /* right: eye btn only */
   color: var(--color-text);
   font-size: 0.93rem;
   font-family: inherit;

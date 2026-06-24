@@ -2,7 +2,6 @@
  * components/PasswordInput.jsx
  *
  * Reusable password field with:
- *   - Left lock icon (inline SVG)
  *   - Right eye / eye-off toggle (inline SVG)
  *   - Independent visibility state per instance
  *   - Consistent height (58px), border-radius (14px), green focus ring
@@ -19,32 +18,13 @@
 
 import { useState } from "react";
 
-/* ── Inline SVG icons (no external library required) ──────── */
-
-function LockIcon() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-    </svg>
-  );
-}
+/* ── Eye / EyeOff icons (inline SVG) ─────────────────────── */
 
 function EyeIcon() {
   return (
     <svg
-      width="16"
-      height="16"
+      width="17"
+      height="17"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -62,8 +42,8 @@ function EyeIcon() {
 function EyeOffIcon() {
   return (
     <svg
-      width="16"
-      height="16"
+      width="17"
+      height="17"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -95,11 +75,6 @@ export default function PasswordInput({
 
   return (
     <div className="pw-field">
-      {/* Left lock icon */}
-      <span className="pw-icon-left" aria-hidden="true">
-        <LockIcon />
-      </span>
-
       <input
         id={id}
         name={name}
