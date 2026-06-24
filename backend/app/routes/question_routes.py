@@ -65,7 +65,7 @@ async def submit_question(
     doc = {
         "user_id": user_id,
         "text": body.text,
-        "embedding": embedding,          # stored as plain array
+        "embedding": embedding,
         "tag": tag_result["tag"],
         "tag_confidence": tag_result["confidence"],
         "similar_questions": similar_raw,
@@ -102,8 +102,7 @@ async def get_question_history(
 ):
     """
     Protected endpoint — return the logged-in user's question history.
-    Optionally filter by ?tag=Biology etc.
-    Results are ordered newest-first.
+    Optionally filter by ?tag=Biology etc. Results are ordered newest-first.
     """
     db = get_db()
     user_id = current_user["sub"]
@@ -114,8 +113,62 @@ async def get_question_history(
 
     cursor = db.questions.find(
         query_filter,
-        {"embedding": 0},               # exclude large embedding array from list view
+        {"embedding": 0},
     ).sort("created_at", -1)
 
     docs = await cursor.to_list(length=200)
     return [_serialize_question(d) for d in docs]
+
+
+@router.post("/retag-all", tags=["admin"])
+async def retag_all_questions(
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Admin endpoint — re-tag every question in the database using the
+    current embedding model and updated topic descriptions.
+
+    Call this ONCE after changing TOPIC_DESCRIPTIONS or CONFIDENCE_THRESHOLD
+    to fix historical records that were tagged under the old logic.
+
+    Requires a valid JWT. Returns a summary and new tag distribution.
+    """
+    db = get_db()
+
+    # Fetch all questions that have a stored embedding
+    cursor = db.questions.find(
+        {"embedding": {"$exists": True}},
+        {"_id": 1, "embedding": 1},
+    )
+    docs = await cursor.to_list(length=None)
+
+    if not docs:
+        return {"updated": 0, "message": "No questions with embeddings found."}
+
+    updated = 0
+    tag_counts: dict = {}
+
+    for doc in docs:
+        try:
+            result = assign_topic_tag(doc["embedding"])
+            new_tag = result["tag"]
+            new_confidence = result["confidence"]
+
+            await db.questions.update_one(
+                {"_id": doc["_id"]},
+                {"$set": {
+                    "tag": new_tag,
+                    "tag_confidence": new_confidence,
+                }},
+            )
+            updated += 1
+            tag_counts[new_tag] = tag_counts.get(new_tag, 0) + 1
+        except Exception:
+            continue  # skip docs with malformed embeddings
+
+    return {
+        "updated": updated,
+        "total": len(docs),
+        "tag_distribution": tag_counts,
+        "message": f"Successfully re-tagged {updated} of {len(docs)} questions.",
+    }
