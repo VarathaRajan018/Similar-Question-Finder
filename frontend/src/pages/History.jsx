@@ -189,19 +189,6 @@ export default function History() {
               {/* Question text */}
               <p className="history-text">{q.text}</p>
 
-              {/* Suggested Answer (only shown if one was surfaced at submit time) */}
-              {q.suggested_answer && (
-                <div className="history-suggested-answer">
-                  <span className="history-answer-label">💡 Suggested Answer</span>
-                  {q.best_similarity > 0 && (
-                    <span className="history-similarity-badge">
-                      {Math.round(q.best_similarity * 100)}% match
-                    </span>
-                  )}
-                  <p className="history-answer-text">{q.suggested_answer}</p>
-                </div>
-              )}
-
               {/* Footer meta */}
               <div className="history-meta">
                 <span>

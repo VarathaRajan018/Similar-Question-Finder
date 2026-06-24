@@ -1,10 +1,6 @@
 /**
- * pages/AskQuestion.jsx — Chat-style question interface with Suggested Answer
- *
- * New in this version:
- * - SuggestedAnswerCard component rendered inside the AI response
- * - Shows answer when best_similarity >= 70%, otherwise shows a note
- * - All API calls, state, and routing unchanged
+ * pages/AskQuestion.jsx — Chat-style question interface (Claude / ChatGPT layout)
+ * Functionality is identical to the original; only the layout and UX are new.
  */
 
 import { useState, useRef, useEffect } from "react";
@@ -47,34 +43,6 @@ function SimilarCard({ question }) {
   );
 }
 
-function SuggestedAnswerCard({ answer, bestSimilarity }) {
-  const pct = Math.round(bestSimilarity * 100);
-  const hasAnswer = !!answer;
-
-  return (
-    <div className={`suggested-answer-card ${hasAnswer ? "has-answer" : "no-answer"}`}>
-      <div className="suggested-answer-header">
-        <span className="suggested-answer-icon" aria-hidden="true">
-          {hasAnswer ? "💡" : "📭"}
-        </span>
-        <span className="suggested-answer-title">
-          {hasAnswer ? "Suggested Answer" : "No answer available yet"}
-        </span>
-        {hasAnswer && pct > 0 && (
-          <span className="suggested-answer-badge">{pct}% match</span>
-        )}
-      </div>
-      {hasAnswer ? (
-        <p className="suggested-answer-text">{answer}</p>
-      ) : (
-        <p className="suggested-answer-hint">
-          No stored answer found for similar questions.
-        </p>
-      )}
-    </div>
-  );
-}
-
 const EXAMPLE_QUESTIONS = [
   "How does photosynthesis work?",
   "What is Newton's second law?",
@@ -89,8 +57,7 @@ function EmptyState({ onChipClick }) {
       <h2 className="chat-empty-title">Ask a Study Question</h2>
       <p className="chat-empty-sub">
         Type any question below — we'll instantly find semantically similar past
-        questions, auto-assign a subject tag, and surface a suggested answer if
-        one exists.
+        questions and auto-assign a subject tag using local AI.
       </p>
       <div className="chat-empty-chips">
         {EXAMPLE_QUESTIONS.map((q) => (
@@ -120,18 +87,20 @@ function ThinkingIndicator() {
 /* ── Main component ─────────────────────────────────────────── */
 
 export default function AskQuestion() {
-  const [text, setText]     = useState("");
+  const [text, setText] = useState("");
   const [result, setResult] = useState(null);
-  const [error, setError]   = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const messagesEndRef = useRef(null);
-  const textareaRef    = useRef(null);
+  const textareaRef = useRef(null);
 
+  /* Scroll to bottom when result or loading state changes */
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [result, loading]);
 
+  /* Auto-resize textarea up to 180px */
   function resizeTextarea() {
     const ta = textareaRef.current;
     if (!ta) return;
@@ -144,6 +113,7 @@ export default function AskQuestion() {
     resizeTextarea();
   }
 
+  /* Enter = submit, Shift+Enter = newline */
   function handleKeyDown(e) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -151,6 +121,7 @@ export default function AskQuestion() {
     }
   }
 
+  /* Pre-fill input from an example chip */
   function handleChipClick(q) {
     setText(q);
     textareaRef.current?.focus();
@@ -173,14 +144,14 @@ export default function AskQuestion() {
       setResult(res);
     } catch (err) {
       setError(err.message);
-      setText(submitted);
+      setText(submitted); // restore text on failure
     } finally {
       setLoading(false);
     }
   }
 
-  const canSubmit  = !loading && text.trim().length >= 5;
-  const showEmpty  = !result && !error && !loading;
+  const canSubmit = !loading && text.trim().length >= 5;
+  const showEmpty = !result && !error && !loading;
 
   return (
     <div className="chat-page">
@@ -211,40 +182,27 @@ export default function AskQuestion() {
               <div className="chat-response-avatar" aria-hidden="true">🎓</div>
               <div className="chat-response-body">
 
-                {/* Tag + confidence row */}
+                {/* Tag result row */}
                 <div className="chat-tag-row">
                   <span className="chat-tag-label">Auto-tagged as</span>
                   <TagBadge tag={result.tag} confidence={result.tag_confidence} />
                   <span className="chat-saved-note">· Saved to history</span>
                 </div>
 
-                {/* Suggested Answer card */}
-                <SuggestedAnswerCard
-                  answer={result.suggested_answer}
-                  bestSimilarity={result.best_similarity ?? 0}
-                />
-
                 {/* Similar questions */}
+                <p className="chat-similar-heading">
+                  {result.similar_questions.length === 0
+                    ? "No similar questions yet — you're the first to ask this!"
+                    : `${result.similar_questions.length} Similar Past Question${result.similar_questions.length !== 1 ? "s" : ""} Found`}
+                </p>
+
                 {result.similar_questions.length > 0 && (
-                  <>
-                    <p className="chat-similar-heading">
-                      {result.similar_questions.length} Similar Past Question
-                      {result.similar_questions.length !== 1 ? "s" : ""} Found
-                    </p>
-                    <div className="similar-list">
-                      {result.similar_questions.map((q) => (
-                        <SimilarCard key={q.question_id} question={q} />
-                      ))}
-                    </div>
-                  </>
+                  <div className="similar-list">
+                    {result.similar_questions.map((q) => (
+                      <SimilarCard key={q.question_id} question={q} />
+                    ))}
+                  </div>
                 )}
-
-                {result.similar_questions.length === 0 && (
-                  <p className="chat-similar-heading">
-                    No similar questions yet — you're the first to ask this!
-                  </p>
-                )}
-
               </div>
             </div>
           </div>
@@ -279,6 +237,7 @@ export default function AskQuestion() {
                 title="Send (Enter)"
                 aria-label="Send question"
               >
+                {/* Upward arrow icon */}
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                   <path
                     d="M8 13V3M8 3L3.5 7.5M8 3L12.5 7.5"
