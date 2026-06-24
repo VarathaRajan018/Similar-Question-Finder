@@ -63,8 +63,13 @@ _model = TextEmbedding(model_name=MODEL_NAME)
 # Confidence threshold for topic tagging.
 # If the highest subject similarity score is below this value, the question
 # is too ambiguous to classify and is assigned the "Other" tag instead.
+#
+# NOTE: all-MiniLM-L6-v2 via fastembed produces cosine similarities in the
+# 0.15–0.40 range for cross-domain topic classification. A threshold of 0.45
+# was too aggressive and classified everything as "Other". 0.28 retains the
+# safety net for genuinely meaningless text while allowing real questions through.
 # ---------------------------------------------------------------------------
-CONFIDENCE_THRESHOLD: float = 0.45
+CONFIDENCE_THRESHOLD: float = 0.28
 
 # ---------------------------------------------------------------------------
 # Topic definitions — richer phrases give the model more context for
@@ -81,7 +86,10 @@ TOPIC_DESCRIPTIONS: Dict[str, str] = {
     "Physics": (
         "Physics: mechanics, forces, energy, thermodynamics, electromagnetism, "
         "waves, optics, quantum mechanics, relativity, motion, gravity, "
-        "nuclear physics, particle physics, circuits, magnetism"
+        "nuclear physics, particle physics, circuits, magnetism, "
+        "orbital mechanics, planetary motion, Earth's rotation, "
+        "gravitational force, celestial mechanics, astronomy, solar system, "
+        "Newton's laws, acceleration, velocity, momentum, friction"
     ),
     "Chemistry": (
         "Chemistry: atoms, molecules, chemical reactions, periodic table, "
@@ -113,7 +121,11 @@ TOPIC_DESCRIPTIONS: Dict[str, str] = {
         "Geography: countries, capitals, continents, oceans, mountains, rivers, "
         "climate zones, maps, latitude, longitude, natural resources, "
         "population, urbanisation, tectonic plates, weather patterns, "
-        "migration, landforms, physical geography, human geography"
+        "migration, landforms, physical geography, human geography, "
+        "seasons, Earth's orbit, axial tilt, solar radiation, atmosphere, "
+        "Earth science, hemisphere, tropical, polar, temperate zones, "
+        "day length, monsoon, rainfall, erosion, volcanoes, earthquakes, "
+        "biomes, deserts, rainforests, glaciers, sea level, ocean currents"
     ),
     "Economics": (
         "Economics: supply, demand, market, inflation, GDP, trade, fiscal policy, "
