@@ -1,26 +1,24 @@
-/*
- * History.css — Dedicated styles for the Question History page
- * Theme: Forest Green (#1B4332) on White (#FFFFFF)
- */
+/* ============================================================
+   History.css — Dedicated styles for the Question History page
+   Theme: Forest Green (#1B4332) on White/F8FAF8
+   ============================================================ */
 
-/* ── Page container ───────────────────────────────────────── */
+/* ── Page shell ──────────────────────────────────────────────── */
 .history-page {
-  max-width: 900px;
+  max-width: 860px;
   margin: 0 auto;
-  padding: 2rem 1.25rem 3rem;
-  animation: histFadeIn 0.22s ease;
+  padding: 2rem 1rem 3rem;
+  animation: hfadeIn 0.25s ease;
 }
 
-@keyframes histFadeIn {
+@keyframes hfadeIn {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Header ───────────────────────────────────────────────── */
+/* ── Header ──────────────────────────────────────────────────── */
 .history-header {
   margin-bottom: 2rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1.5px solid #D8E2DC;
 }
 
 .history-title {
@@ -29,270 +27,251 @@
   color: #1B4332;
   letter-spacing: -0.03em;
   margin-bottom: 0.4rem;
-  line-height: 1.2;
+  line-height: 1.15;
 }
 
 .history-subtitle {
   color: #6B7280;
   font-size: 0.95rem;
-  line-height: 1.55;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
 }
 
-/* ── Controls row: search (65%) + filter pills (35%) ─────── */
+.history-divider {
+  height: 1px;
+  background: linear-gradient(90deg, #D8E2DC 0%, transparent 100%);
+  border: none;
+  margin: 0;
+}
+
+/* ── Controls row: search (65%) + topic dropdown (35%) ───────── */
 .history-controls {
   display: flex;
-  gap: 1rem;
-  align-items: flex-start;
-  margin-bottom: 1.75rem;
-  flex-wrap: wrap;
+  gap: 0.875rem;
+  margin-bottom: 1.25rem;
+  align-items: stretch;
 }
 
-/* Search bar — grows to ~65% */
-.history-search-wrapper {
+/* Search wrapper — 65% */
+.history-search-section {
+  flex: 0 0 65%;
+  min-width: 0;
   position: relative;
-  flex: 1 1 220px;
 }
 
-.history-search-icon {
+.history-search-icon-wrap {
   position: absolute;
   left: 1rem;
   top: 50%;
   transform: translateY(-50%);
   color: #94A3B8;
-  pointer-events: none;
   display: flex;
   align-items: center;
+  pointer-events: none;
   z-index: 1;
 }
 
 .history-search-input {
   width: 100%;
-  height: 48px;
+  height: 50px;
   padding: 0 1rem 0 2.75rem;
   border: 1px solid #D8E2DC;
   border-radius: 16px;
-  background: #FFFFFF;
+  background: #fff;
   color: #1F2937;
-  font-size: 0.9rem;
+  font-size: 0.91rem;
   font-family: inherit;
   outline: none;
   transition: border-color 180ms ease, box-shadow 180ms ease;
-  box-shadow: 0 1px 4px rgba(27,67,50,0.05);
 }
-
-.history-search-input::placeholder {
-  color: #94A3B8;
-}
-
+.history-search-input::placeholder { color: #94A3B8; }
 .history-search-input:focus {
   border-color: #2D6A4F;
   box-shadow: 0 0 0 3px rgba(45,106,79,0.12);
 }
 
-/* Filter section — shrinks to ~35% on desktop */
-.history-filters-section {
-  flex: 0 1 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+/* Topic dropdown — 35% */
+.history-filter-section {
+  flex: 1;
+  position: relative;
+  min-width: 0;
 }
 
-.history-filter-label {
+.history-filter-icon-wrap {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94A3B8;
   display: flex;
   align-items: center;
-  gap: 0.35rem;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #94A3B8;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  pointer-events: none;
+  z-index: 1;
 }
 
-/* ── Filter pills ──────────────────────────────────────────── */
-.history-tag-filters {
+.history-topic-select {
+  width: 100%;
+  height: 50px;
+  padding: 0 2.25rem 0 2.75rem;
+  border: 1px solid #D8E2DC;
+  border-radius: 16px;
+  background: #fff;
+  color: #1F2937;
+  font-size: 0.9rem;
+  font-family: inherit;
+  font-weight: 500;
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+.history-topic-select:focus {
+  border-color: #2D6A4F;
+  box-shadow: 0 0 0 3px rgba(45,106,79,0.12);
+}
+
+/* Custom caret for select */
+.history-select-caret {
+  position: absolute;
+  right: 0.875rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: #94A3B8;
+  display: flex;
+  align-items: center;
+}
+
+/* ── Modern pill topic filter buttons ────────────────────────── */
+.history-pills {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: 0.5rem;
+  margin-bottom: 1.75rem;
 }
 
-.history-filter-btn {
-  height: 36px;
-  padding: 0 0.875rem;
+.history-pill {
+  padding: 0.38rem 1rem;
   border-radius: 999px;
   border: 1.5px solid #D8E2DC;
-  background: #FFFFFF;
+  background: #fff;
   color: #6B7280;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 180ms ease;
   font-family: inherit;
+  line-height: 1;
   white-space: nowrap;
-  box-shadow: 0 1px 3px rgba(27,67,50,0.04);
 }
-
-.history-filter-btn:hover {
+.history-pill:hover {
   border-color: #2D6A4F;
   color: #2D6A4F;
   background: #D8F3DC;
 }
-
-.history-filter-btn.hfb-active {
+.history-pill.active {
   background: #1B4332;
   border-color: #1B4332;
-  color: #FFFFFF;
-  box-shadow: 0 2px 8px rgba(27,67,50,0.18);
+  color: #fff;
 }
 
-/* ── Card list ─────────────────────────────────────────────── */
-.history-card-list {
+/* ── Results count ────────────────────────────────────────────── */
+.history-results-meta {
+  font-size: 0.82rem;
+  color: #94A3B8;
+  margin-bottom: 1.1rem;
+  font-weight: 500;
+}
+
+/* ── Question cards ──────────────────────────────────────────── */
+.history-list {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-/* ── Individual card ───────────────────────────────────────── */
-.history-qcard {
-  background: #FFFFFF;
+.history-card {
+  background: #fff;
   border: 1px solid #D8E2DC;
   border-radius: 20px;
   padding: 1.35rem 1.5rem;
   transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
-  box-shadow: 0 2px 8px rgba(27,67,50,0.06), 0 1px 2px rgba(27,67,50,0.04);
-  cursor: default;
+  box-shadow: 0 1px 4px rgba(27,67,50,0.05), 0 2px 8px rgba(27,67,50,0.04);
 }
-
-.history-qcard:hover {
+.history-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 10px 28px rgba(27,67,50,0.13), 0 2px 6px rgba(27,67,50,0.06);
   border-color: #95D5B2;
+  box-shadow: 0 6px 24px rgba(27,67,50,0.12), 0 2px 8px rgba(27,67,50,0.07);
 }
 
-/* Card top row: tag badge + date */
-.history-qcard-top {
+/* Card header row: badge + date */
+.history-card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0.75rem;
-  gap: 0.75rem;
   flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
-/* Tag badge pill — bg/color set inline from tagColor */
-.history-qcard-tag {
+/* Topic badge — pill */
+.history-tag {
   display: inline-flex;
   align-items: center;
   padding: 5px 14px;
   border-radius: 999px;
   font-size: 0.78rem;
   font-weight: 700;
-  letter-spacing: 0.01em;
-  white-space: nowrap;
+  letter-spacing: 0.02em;
+  line-height: 1;
 }
 
-/* Date */
-.history-qcard-date {
-  font-size: 0.8rem;
-  color: #94A3B8;
-  white-space: nowrap;
-  flex-shrink: 0;
+.history-date {
+  font-size: 0.78rem;
+  color: #9CA3AF;
+  font-weight: 400;
 }
 
 /* Question text */
-.history-qcard-text {
+.history-text {
   font-size: 0.97rem;
   color: #1F2937;
-  line-height: 1.65;
-  font-weight: 400;
+  line-height: 1.6;
   margin-bottom: 1rem;
+  font-weight: 450;
 }
 
-/* Card footer: similar count + confidence */
-.history-qcard-footer {
+/* Footer: meta chips row */
+.history-meta {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: 0.875rem;
-  border-top: 1px solid #F0F5F1;
+  gap: 0.6rem;
   flex-wrap: wrap;
-  gap: 0.5rem;
 }
 
-.history-qcard-stat {
-  display: flex;
+.history-meta-chip {
+  display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  font-size: 0.8rem;
-  color: #6B7280;
+  gap: 0.3rem;
+  padding: 0.28rem 0.75rem;
+  background: #F8FAF8;
+  border: 1px solid #D8E2DC;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  color: #4B5563;
   font-weight: 500;
 }
 
-.history-qcard-stat svg {
-  flex-shrink: 0;
-  color: #95D5B2;
-}
-
-.history-qcard-stat strong {
-  color: #1B4332;
-  font-weight: 700;
-}
-
-/* ── Empty / loading states ────────────────────────────────── */
-.history-empty-state {
+/* ── Loading state ────────────────────────────────────────────── */
+.history-loading {
   text-align: center;
   padding: 4rem 2rem;
-  color: #6B7280;
-  animation: histFadeIn 0.25s ease;
-}
-
-.history-empty-icon {
-  font-size: 2.5rem;
-  display: block;
-  margin-bottom: 1rem;
-  opacity: 0.55;
-}
-
-.history-empty-title {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: #374151;
-  margin-bottom: 0.4rem;
-}
-
-.history-empty-sub {
-  font-size: 0.88rem;
-  line-height: 1.55;
-}
-
-.history-empty-link {
-  display: inline-block;
-  margin-top: 1.25rem;
-  padding: 0.55rem 1.25rem;
-  background: #1B4332;
-  color: #FFFFFF;
-  border-radius: 10px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  text-decoration: none !important;
-  transition: background 180ms ease, transform 180ms ease;
-}
-
-.history-empty-link:hover {
-  background: #2D6A4F;
-  transform: translateY(-1px);
-}
-
-.history-loading-state {
-  text-align: center;
-  padding: 4rem 2rem;
-  color: #6B7280;
-  font-size: 0.9rem;
+  color: #94A3B8;
 }
 
 .history-loading-dots {
   display: flex;
-  gap: 6px;
   justify-content: center;
+  gap: 6px;
   margin-bottom: 1rem;
 }
 
@@ -301,24 +280,81 @@
   height: 8px;
   border-radius: 50%;
   background: #95D5B2;
-  animation: ldot 1.3s infinite ease-in-out;
+  animation: ldot 1.2s infinite ease-in-out;
 }
-
-.history-loading-dots span:nth-child(2) { animation-delay: 0.18s; }
-.history-loading-dots span:nth-child(3) { animation-delay: 0.36s; }
+.history-loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+.history-loading-dots span:nth-child(3) { animation-delay: 0.4s; }
 
 @keyframes ldot {
-  0%, 75%, 100% { transform: translateY(0); opacity: 0.4; }
-  35%           { transform: translateY(-8px); opacity: 1; }
+  0%, 80%, 100% { transform: scale(0.7); opacity: 0.4; }
+  40%           { transform: scale(1);   opacity: 1;   }
 }
 
-/* ── Responsive ────────────────────────────────────────────── */
-@media (max-width: 640px) {
-  .history-page     { padding: 1.25rem 0.875rem 2.5rem; }
-  .history-title    { font-size: 1.6rem; }
+/* ── Empty / no-results states ───────────────────────────────── */
+.history-empty {
+  text-align: center;
+  padding: 4rem 2rem;
+  animation: hfadeIn 0.25s ease;
+}
+
+.history-empty-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  line-height: 1;
+  display: block;
+}
+
+.history-empty-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1F2937;
+  margin-bottom: 0.4rem;
+}
+
+.history-empty-sub {
+  font-size: 0.88rem;
+  color: #94A3B8;
+  margin-bottom: 1.25rem;
+  line-height: 1.6;
+}
+
+.history-empty-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.55rem 1.25rem;
+  background: #1B4332;
+  color: #fff;
+  border-radius: 10px;
+  font-size: 0.87rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 180ms ease, transform 180ms ease;
+}
+.history-empty-link:hover {
+  background: #2D6A4F;
+  transform: translateY(-1px);
+  text-decoration: none;
+}
+
+/* ── Error ────────────────────────────────────────────────────── */
+.history-error {
+  padding: 0.75rem 1rem;
+  background: #FEF2F2;
+  color: #DC2626;
+  border: 1px solid #FECACA;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+/* ── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .history-page { padding: 1.5rem 0.875rem 2.5rem; }
+  .history-title { font-size: 1.55rem; }
   .history-controls { flex-direction: column; }
-  .history-search-wrapper { flex: 1 1 100%; }
-  .history-filters-section { flex: 1 1 100%; }
-  .history-qcard   { padding: 1.1rem 1.15rem; border-radius: 16px; }
-  .history-qcard-footer { flex-direction: column; align-items: flex-start; }
+  .history-search-section { flex: none; width: 100%; }
+  .history-filter-section { flex: none; width: 100%; }
+  .history-card { padding: 1.1rem 1.15rem; border-radius: 16px; }
+  .history-meta { flex-direction: column; gap: 0.4rem; }
 }

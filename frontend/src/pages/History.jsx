@@ -1,16 +1,26 @@
 /**
- * pages/History.jsx — Question history with search, tag filters, premium card UI
+ * pages/History.jsx — Question History with modern premium UI
  *
- * State logic, API calls, and filtering are identical to previous version.
- * Only the JSX structure and CSS classes have changed.
+ * Functionality (unchanged):
+ *   - Live search filtering by question text and tag (client-side, no extra API)
+ *   - Topic filter via pill buttons + dropdown select (both sync activeTag state)
+ *   - Displays: question text, tag, similar count, tag confidence, date
+ *   - Search resets when topic filter changes
+ *
+ * UI changes:
+ *   - New header with title, subtitle, divider
+ *   - Controls row: search input (65%) + topic dropdown (35%)
+ *   - Modern pill buttons below controls
+ *   - 20px radius cards with hover lift
+ *   - Meta info shown as chips in card footer
+ *   - Animated loading dots
+ *   - Improved empty / no-results states
  */
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { questionApi } from "../api/client";
 import { tagColor } from "../theme";
 import "./History.css";
-
-/* ─── Constants ─────────────────────────────────────────────── */
 
 const TAGS = [
   "All",
@@ -25,146 +35,84 @@ const TAGS = [
 
 function formatDate(isoString) {
   return new Date(isoString).toLocaleDateString("en-GB", {
-    day:    "numeric",
-    month:  "short",
-    year:   "numeric",
-    hour:   "2-digit",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
     minute: "2-digit",
   });
 }
 
-/* ─── Inline SVG icons (no external assets) ─────────────────── */
+/* ── Inline SVG icons ──────────────────────────────────────── */
 
 function SearchIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" strokeWidth="1.7" />
-      <path d="M10.5 10.5L14 14" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+      strokeLinejoin="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
     </svg>
   );
 }
 
 function FilterIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+      strokeLinejoin="round" aria-hidden="true">
+      <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+    </svg>
+  );
+}
+
+function ChevronDownIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
+      strokeLinejoin="round" aria-hidden="true">
+      <polyline points="6 9 12 15 18 9" />
     </svg>
   );
 }
 
 function SimilarIcon() {
   return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <circle cx="9" cy="7" r="4" stroke="currentColor" strokeWidth="2" />
-      <path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <path d="M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+      strokeLinejoin="round" aria-hidden="true">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
     </svg>
   );
 }
 
 function ConfidenceIcon() {
   return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-        stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+      strokeLinejoin="round" aria-hidden="true">
+      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
     </svg>
   );
 }
 
-/* ─── Sub-components ─────────────────────────────────────────── */
-
-function LoadingState() {
-  return (
-    <div className="history-loading-state">
-      <div className="history-loading-dots">
-        <span /><span /><span />
-      </div>
-      Loading your questions…
-    </div>
-  );
-}
-
-function EmptyState({ type, activeTag }) {
-  if (type === "no-match") {
-    return (
-      <div className="history-empty-state">
-        <span className="history-empty-icon">🔍</span>
-        <p className="history-empty-title">No questions found matching your criteria.</p>
-        <p className="history-empty-sub">Try changing filters or adjusting your search keyword.</p>
-      </div>
-    );
-  }
-
-  /* type === "no-data" */
-  return (
-    <div className="history-empty-state">
-      <span className="history-empty-icon">📚</span>
-      <p className="history-empty-title">
-        {activeTag !== "All"
-          ? `No ${activeTag} questions yet.`
-          : "No questions asked yet."}
-      </p>
-      <p className="history-empty-sub">
-        {activeTag !== "All"
-          ? "Try selecting a different subject filter."
-          : "Try changing filters or ask a new question."}
-      </p>
-      {activeTag === "All" && (
-        <a href="/ask" className="history-empty-link">Ask Your First Question →</a>
-      )}
-    </div>
-  );
-}
-
-function QuestionCard({ q }) {
-  const { bg, text: textColor } = tagColor(q.tag);
-  return (
-    <div className="history-qcard">
-      {/* Top row: tag + date */}
-      <div className="history-qcard-top">
-        <span
-          className="history-qcard-tag"
-          style={{ backgroundColor: bg, color: textColor }}
-        >
-          {q.tag}
-        </span>
-        <span className="history-qcard-date">{formatDate(q.created_at)}</span>
-      </div>
-
-      {/* Question text */}
-      <p className="history-qcard-text">{q.text}</p>
-
-      {/* Footer: similar count + confidence */}
-      <div className="history-qcard-footer">
-        <span className="history-qcard-stat">
-          <SimilarIcon />
-          <strong>{q.similar_count}</strong>
-          {" "}similar question{q.similar_count !== 1 ? "s" : ""} found
-        </span>
-        <span className="history-qcard-stat">
-          <ConfidenceIcon />
-          Tag confidence: <strong>{Math.round(q.tag_confidence * 100)}%</strong>
-        </span>
-      </div>
-    </div>
-  );
-}
-
-/* ─── Main page component ────────────────────────────────────── */
+/* ── Main component ────────────────────────────────────────── */
 
 export default function History() {
-  const [questions,   setQuestions]   = useState([]);
-  const [activeTag,   setActiveTag]   = useState("All");
+  const [questions, setQuestions]     = useState([]);
+  const [activeTag, setActiveTag]     = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
-  const [loading,     setLoading]     = useState(true);
-  const [error,       setError]       = useState("");
+  const [loading, setLoading]         = useState(true);
+  const [error, setError]             = useState("");
 
-  /* Fetch from API whenever the tag filter changes — unchanged logic */
+  /* Fetch from API whenever the topic filter changes */
   const fetchHistory = useCallback(async (tag) => {
     setLoading(true);
     setError("");
-    setSearchQuery(""); // reset search on tag switch
+    setSearchQuery("");
     try {
       const data = await questionApi.history(tag === "All" ? null : tag);
       setQuestions(data);
@@ -179,7 +127,7 @@ export default function History() {
     fetchHistory(activeTag);
   }, [activeTag, fetchHistory]);
 
-  /* Client-side search — filters by text AND tag, no extra API call */
+  /* Client-side search — no extra API call */
   const filtered = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return questions;
@@ -190,23 +138,29 @@ export default function History() {
     );
   }, [questions, searchQuery]);
 
+  /* Sync dropdown and pills — both control the same state */
+  function handleTagChange(tag) {
+    setActiveTag(tag);
+  }
+
   return (
     <div className="history-page">
 
-      {/* ── Header ──────────────────────────────────────────── */}
+      {/* ── Header ─────────────────────────────────────────── */}
       <div className="history-header">
         <h1 className="history-title">Question History</h1>
         <p className="history-subtitle">
           Review, search, and filter your previously asked study questions.
         </p>
+        <hr className="history-divider" />
       </div>
 
-      {/* ── Controls row: search + filter pills ─────────────── */}
+      {/* ── Controls: search (65%) + topic dropdown (35%) ─── */}
       <div className="history-controls">
 
-        {/* Search bar — flex: 1, grows to fill ~65% */}
-        <div className="history-search-wrapper">
-          <span className="history-search-icon" aria-hidden="true">
+        {/* Search input */}
+        <div className="history-search-section">
+          <span className="history-search-icon-wrap" aria-hidden="true">
             <SearchIcon />
           </span>
           <input
@@ -220,55 +174,126 @@ export default function History() {
           />
         </div>
 
-        {/* Filter section — shrinks to ~35% on desktop */}
-        <div className="history-filters-section">
-          <span className="history-filter-label">
-            <FilterIcon /> Filter by topic
+        {/* Topic dropdown */}
+        <div className="history-filter-section">
+          <span className="history-filter-icon-wrap" aria-hidden="true">
+            <FilterIcon />
           </span>
-          <div className="history-tag-filters" role="group" aria-label="Filter by topic">
-            {TAGS.map((tag) => {
-              const isActive  = activeTag === tag;
-              const isSubject = tag !== "All";
-              const { bar }   = isSubject ? tagColor(tag) : { bar: null };
-              /* Subject-specific colour only when active; otherwise forest green */
-              const activeStyle =
-                isActive && isSubject
-                  ? { backgroundColor: bar, borderColor: bar }
-                  : {};
-              return (
-                <button
-                  key={tag}
-                  id={`filter-${tag.toLowerCase().replace(/\s+/g, "-")}`}
-                  className={`history-filter-btn${isActive ? " hfb-active" : ""}`}
-                  style={activeStyle}
-                  onClick={() => setActiveTag(tag)}
-                >
-                  {tag}
-                </button>
-              );
-            })}
-          </div>
+          <select
+            id="history-topic-select"
+            className="history-topic-select"
+            value={activeTag}
+            onChange={(e) => handleTagChange(e.target.value)}
+            aria-label="Filter by topic"
+          >
+            {TAGS.map((tag) => (
+              <option key={tag} value={tag}>{tag === "All" ? "All Topics" : tag}</option>
+            ))}
+          </select>
+          <span className="history-select-caret" aria-hidden="true">
+            <ChevronDownIcon />
+          </span>
         </div>
       </div>
 
-      {/* ── API error ────────────────────────────────────────── */}
-      {error && <div className="alert alert-error">{error}</div>}
+      {/* ── Modern pill topic filters ────────────────────── */}
+      <div className="history-pills" role="group" aria-label="Filter by topic">
+        {TAGS.map((tag) => (
+          <button
+            key={tag}
+            id={`pill-${tag.toLowerCase().replace(/\s+/g, "-")}`}
+            className={`history-pill${activeTag === tag ? " active" : ""}`}
+            onClick={() => handleTagChange(tag)}
+          >
+            {tag}
+          </button>
+        ))}
+      </div>
 
-      {/* ── Content ──────────────────────────────────────────── */}
+      {error && <div className="history-error">{error}</div>}
+
+      {/* ── Content area ────────────────────────────────── */}
       {loading ? (
-        <LoadingState />
-      ) : questions.length === 0 ? (
-        <EmptyState type="no-data" activeTag={activeTag} />
-      ) : filtered.length === 0 ? (
-        <EmptyState type="no-match" activeTag={activeTag} />
-      ) : (
-        <div className="history-card-list">
-          {filtered.map((q) => (
-            <QuestionCard key={q.question_id} q={q} />
-          ))}
+        <div className="history-loading">
+          <div className="history-loading-dots">
+            <span /><span /><span />
+          </div>
+          <p>Loading your questions…</p>
         </div>
-      )}
 
+      ) : questions.length === 0 ? (
+        /* No questions for this topic at all */
+        <div className="history-empty">
+          <span className="history-empty-icon">📚</span>
+          <p className="history-empty-title">No questions found matching your criteria.</p>
+          <p className="history-empty-sub">
+            {activeTag !== "All"
+              ? `No ${activeTag} questions in your history. Try a different topic or ask one!`
+              : "Try changing filters or ask a new question to get started."}
+          </p>
+          {activeTag === "All" && (
+            <a href="/ask" className="history-empty-link">
+              ✦ Ask a Question
+            </a>
+          )}
+        </div>
+
+      ) : filtered.length === 0 ? (
+        /* Questions exist but search found nothing */
+        <div className="history-empty">
+          <span className="history-empty-icon">🔍</span>
+          <p className="history-empty-title">No questions found matching your criteria.</p>
+          <p className="history-empty-sub">
+            Try changing filters or ask a new question.
+          </p>
+        </div>
+
+      ) : (
+        <>
+          {/* Results count */}
+          <p className="history-results-meta">
+            {filtered.length} question{filtered.length !== 1 ? "s" : ""}
+            {searchQuery ? ` matching "${searchQuery}"` : activeTag !== "All" ? ` in ${activeTag}` : ""}
+          </p>
+
+          <div className="history-list">
+            {filtered.map((q) => (
+              <div key={q.question_id} className="history-card">
+
+                {/* Card header: subject badge + date */}
+                <div className="history-card-header">
+                  <span
+                    className="history-tag"
+                    style={{
+                      backgroundColor: tagColor(q.tag).bg,
+                      color:           tagColor(q.tag).text,
+                    }}
+                  >
+                    {q.tag}
+                  </span>
+                  <span className="history-date">{formatDate(q.created_at)}</span>
+                </div>
+
+                {/* Question text */}
+                <p className="history-text">{q.text}</p>
+
+                {/* Footer chips: similar count + confidence */}
+                <div className="history-meta">
+                  <span className="history-meta-chip">
+                    <SimilarIcon />
+                    {q.similar_count} similar question{q.similar_count !== 1 ? "s" : ""} found
+                  </span>
+                  <span className="history-meta-chip">
+                    <ConfidenceIcon />
+                    Tag confidence: {Math.round(q.tag_confidence * 100)}%
+                  </span>
+                </div>
+
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
