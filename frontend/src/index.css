@@ -249,31 +249,44 @@ a:hover { text-decoration: underline; }
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding-top: 2.5rem;
+  padding-top: 2rem;
 }
 
 .auth-card {
   width: 100%;
-  max-width: 420px;
+  max-width: 440px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: 2.25rem 2rem;
+  padding: 2.25rem 2.25rem 2rem;
   box-shadow: var(--shadow-md);
 }
 
+/* Header block — emoji + title + subtitle */
+.auth-header {
+  text-align: center;
+  margin-bottom: 1.75rem;
+}
+
+.auth-logo-icon {
+  font-size: 2.25rem;
+  line-height: 1;
+  margin-bottom: 0.75rem;
+  display: block;
+}
+
 .auth-card h1 {
-  font-size: 1.55rem;
+  font-size: 1.65rem;
   font-weight: 800;
-  color: var(--color-text);
-  margin-bottom: 0.25rem;
-  letter-spacing: -0.02em;
+  color: var(--color-primary);
+  margin-bottom: 0.3rem;
+  letter-spacing: -0.025em;
 }
 
 .auth-sub {
   color: var(--color-text-muted);
   font-size: 0.88rem;
-  margin-bottom: 1.75rem;
+  margin-bottom: 0;
 }
 
 .auth-form {
@@ -282,28 +295,33 @@ a:hover { text-decoration: underline; }
   gap: 1.1rem;
 }
 
+/* ── Labels ──────────────────────────────────────────────── */
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.4rem;
 }
 
 .form-group label {
-  font-size: 0.82rem;
-  font-weight: 600;
+  font-size: 0.83rem;
+  font-weight: 700;
   color: var(--color-text);
   letter-spacing: 0.01em;
 }
 
+/* ── Base input style ─────────────────────────────────────── */
 .form-group input {
+  height: 58px;
   background: var(--color-surface-2);
-  border: 1.5px solid var(--color-border);
-  border-radius: var(--radius);
-  padding: 0.65rem 0.875rem;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 0 1rem;
   color: var(--color-text);
-  font-size: 0.9rem;
+  font-size: 0.93rem;
+  font-family: inherit;
   transition: border-color var(--transition), box-shadow var(--transition);
   outline: none;
+  width: 100%;
 }
 
 .form-group input::placeholder {
@@ -311,9 +329,120 @@ a:hover { text-decoration: underline; }
 }
 
 .form-group input:focus {
-  border-color: var(--color-border-focus);
+  border-color: #2D6A4F;
   background: var(--color-surface);
-  box-shadow: 0 0 0 3px rgba(27,67,50,0.10);
+  box-shadow: 0 0 0 3px rgba(45,106,79,0.15);
+}
+
+/* ── Email / Text input with left icon ───────────────────── */
+.input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon-left {
+  position: absolute;
+  left: 1rem;
+  color: #94A3B8;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Input that has a left icon — shift text right */
+.input-has-left-icon {
+  padding-left: 2.75rem !important;
+}
+
+/* ── PasswordInput component ─────────────────────────────── */
+.pw-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Lock icon on the left */
+.pw-icon-left {
+  position: absolute;
+  left: 1rem;
+  color: #94A3B8;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* The actual <input> inside PasswordInput */
+.pw-input {
+  height: 58px;
+  width: 100%;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 0 3rem 0 2.75rem;   /* left: lock icon | right: eye btn */
+  color: var(--color-text);
+  font-size: 0.93rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+.pw-input::placeholder {
+  color: var(--color-text-muted);
+}
+.pw-input:focus {
+  border-color: #2D6A4F;
+  background: var(--color-surface);
+  box-shadow: 0 0 0 3px rgba(45,106,79,0.15);
+}
+
+/* Eye toggle button on the right */
+.pw-eye-btn {
+  position: absolute;
+  right: 0.875rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #94A3B8;
+  display: flex;
+  align-items: center;
+  padding: 0.25rem;
+  border-radius: 6px;
+  transition: color var(--transition), background var(--transition);
+  line-height: 1;
+}
+.pw-eye-btn:hover {
+  color: #1B4332;
+  background: var(--color-primary-light);
+}
+.pw-eye-btn:focus-visible {
+  outline: 2px solid #2D6A4F;
+  outline-offset: 2px;
+}
+
+/* ── Inline field validation error ───────────────────────── */
+.field-error {
+  font-size: 0.8rem;
+  color: var(--color-danger);
+  margin-top: 0.1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.field-error::before {
+  content: "⚠";
+  font-size: 0.75rem;
+}
+
+/* ── Submit button ───────────────────────────────────────── */
+.auth-submit-btn {
+  height: 52px;
+  font-size: 0.97rem;
+  font-weight: 700;
+  margin-top: 0.25rem;
+  border-radius: 14px;
+  letter-spacing: 0.015em;
 }
 
 .auth-switch {
