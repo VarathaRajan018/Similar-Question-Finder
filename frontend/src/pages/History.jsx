@@ -1,18 +1,23 @@
 /**
- * pages/History.jsx — User's question history with tag filters + live search
+ * pages/History.jsx — Question history, redesigned
  *
- * Changes from previous version:
- * - Added instant search bar (filters by question text AND tag, client-side)
- * - Search positioned above topic filter pills
- * - Search icon embedded inside the input
- * - Improved card design: rounded corners, hover lift, green badges
- * - "No matching questions found" message when search has no results
- * - All API calls / auth logic unchanged
+ * Functionality unchanged:
+ *   - Client-side search (text + tag)
+ *   - Tag filter (now a select dropdown, same API call)
+ *   - Similar count, tag confidence, date — all preserved
+ *
+ * UI changes:
+ *   - Header: "Question History" + subtitle + divider
+ *   - Controls row: search (65%) + subject dropdown (35%) in one line
+ *   - Cards: 20px radius, stronger shadow, hover lift -3px
+ *   - Topic badge: light-green pill
+ *   - Empty / no-results state: icon + two-line message
  */
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { questionApi } from "../api/client";
 import { tagColor } from "../theme";
+import "./History.css";
 
 const TAGS = [
   "All",
@@ -35,39 +40,54 @@ function formatDate(isoString) {
   });
 }
 
-/* ── Search icon (inline SVG — no external assets) ─────────── */
+/* ── Inline SVG icons ──────────────────────────────────────── */
 function SearchIcon() {
   return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 16 16"
-      fill="none"
-      aria-hidden="true"
-    >
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
       <circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" strokeWidth="1.6" />
-      <path
-        d="M10.5 10.5L14 14"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      />
+      <path d="M10.5 10.5L14 14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
     </svg>
   );
 }
 
-export default function History() {
-  const [questions, setQuestions]   = useState([]);
-  const [activeTag, setActiveTag]   = useState("All");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [loading, setLoading]       = useState(true);
-  const [error, setError]           = useState("");
+function FilterIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
 
-  /* Fetch from API whenever the tag filter changes */
+function EmptyIcon() {
+  return (
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ color: "#95D5B2" }}>
+      <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M11 8v6M8 11h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function QuestionIcon() {
+  return (
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ color: "#95D5B2" }}>
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/* ── Main component ────────────────────────────────────────── */
+export default function History() {
+  const [questions, setQuestions]     = useState([]);
+  const [activeTag, setActiveTag]     = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading]         = useState(true);
+  const [error, setError]             = useState("");
+
   const fetchHistory = useCallback(async (tag) => {
     setLoading(true);
     setError("");
-    setSearchQuery(""); // reset search on tag switch
+    setSearchQuery("");
     try {
       const data = await questionApi.history(tag === "All" ? null : tag);
       setQuestions(data);
@@ -82,7 +102,7 @@ export default function History() {
     fetchHistory(activeTag);
   }, [activeTag, fetchHistory]);
 
-  /* Client-side search — filters by text and tag, no extra API call */
+  /* Client-side instant search — no extra API call */
   const filtered = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return questions;
@@ -94,88 +114,112 @@ export default function History() {
   }, [questions, searchQuery]);
 
   return (
-    <div className="page history-page">
-      <h1>My Question History</h1>
-      <p className="page-sub">
-        All your past questions, newest first. Filter by subject or search
-        by keyword.
-      </p>
+    <div className="hx-page">
 
-      {/* ── Search bar ──────────────────────────────────────── */}
-      <div className="history-search-wrapper">
-        <span className="history-search-icon">
-          <SearchIcon />
-        </span>
-        <input
-          id="history-search"
-          type="search"
-          className="history-search-input"
-          placeholder="Search your previously asked questions..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          aria-label="Search questions"
-        />
+      {/* ── Header ─────────────────────────────────────────── */}
+      <div className="hx-header">
+        <h1 className="hx-title">Question History</h1>
+        <p className="hx-subtitle">
+          Review, search, and filter your previously asked study questions.
+        </p>
+        <div className="hx-divider" />
       </div>
 
-      {/* ── Tag filter pills ─────────────────────────────────── */}
-      <div className="tag-filters" role="group" aria-label="Filter by topic">
-        {TAGS.map((tag) => {
-          const isActive  = activeTag === tag;
-          const isSubject = tag !== "All";
-          const { bar }   = isSubject ? tagColor(tag) : { bar: null };
-          const activeStyle =
-            isActive && isSubject
-              ? { backgroundColor: bar, borderColor: bar }
-              : {};
-          return (
+      {/* ── Controls row: search (65%) + subject dropdown (35%) ── */}
+      <div className="hx-controls">
+        {/* Search */}
+        <div className="hx-search-box">
+          <span className="hx-search-icon"><SearchIcon /></span>
+          <input
+            id="history-search"
+            type="search"
+            className="hx-search-input"
+            placeholder="Search your previously asked questions..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="Search questions"
+          />
+        </div>
+
+        {/* Topic dropdown */}
+        <div className="hx-filter-box">
+          <span className="hx-filter-icon"><FilterIcon /></span>
+          <select
+            id="history-topic-filter"
+            className="hx-filter-select"
+            value={activeTag}
+            onChange={(e) => setActiveTag(e.target.value)}
+            aria-label="Filter by topic"
+          >
+            {TAGS.map((tag) => (
+              <option key={tag} value={tag}>{tag === "All" ? "All Topics" : tag}</option>
+            ))}
+          </select>
+          <span className="hx-select-arrow">▾</span>
+        </div>
+      </div>
+
+      {/* Active filter pill (shows below controls when a specific tag is active) */}
+      {activeTag !== "All" && (
+        <div className="hx-active-filter">
+          <span
+            className="hx-active-pill"
+            style={{
+              backgroundColor: tagColor(activeTag).bg,
+              color: tagColor(activeTag).text,
+            }}
+          >
+            {activeTag}
             <button
-              key={tag}
-              id={`filter-${tag.toLowerCase().replace(/\s+/g, "-")}`}
-              className={`tag-filter-btn ${isActive ? "active" : ""}`}
-              style={activeStyle}
-              onClick={() => setActiveTag(tag)}
+              className="hx-clear-tag"
+              onClick={() => setActiveTag("All")}
+              aria-label="Clear topic filter"
             >
-              {tag}
+              ×
             </button>
-          );
-        })}
-      </div>
+          </span>
+          <span className="hx-result-count">
+            {filtered.length} question{filtered.length !== 1 ? "s" : ""}
+          </span>
+        </div>
+      )}
 
       {error && <div className="alert alert-error">{error}</div>}
 
-      {/* ── Content area ─────────────────────────────────────── */}
+      {/* ── Content ─────────────────────────────────────────── */}
       {loading ? (
-        <div className="loading-state">Loading…</div>
+        <div className="hx-loading">
+          <div className="hx-spinner" />
+          <p>Loading your questions…</p>
+        </div>
       ) : questions.length === 0 ? (
-        /* No questions at all for this tag filter */
-        <div className="empty-state">
-          <p>
-            No questions found
-            {activeTag !== "All" ? ` for "${activeTag}"` : ""}.
+        /* No questions exist at all */
+        <div className="hx-empty">
+          <QuestionIcon />
+          <p className="hx-empty-title">No questions found matching your criteria.</p>
+          <p className="hx-empty-sub">
+            {activeTag !== "All"
+              ? `No ${activeTag} questions yet. Try a different subject.`
+              : <>Try changing filters or <a href="/ask">ask a new question</a>.</>
+            }
           </p>
-          {activeTag === "All" && (
-            <p className="empty-hint">
-              Go to <a href="/ask">Ask a Question</a> to get started!
-            </p>
-          )}
         </div>
       ) : filtered.length === 0 ? (
-        /* Questions exist but search has no matches */
-        <div className="history-no-results">
-          <span>🔍</span>
-          <p style={{ marginTop: "0.5rem" }}>No matching questions found</p>
-          <p style={{ fontSize: "0.83rem", marginTop: "0.25rem" }}>
-            Try a different keyword or clear the search
-          </p>
+        /* Questions exist but search returns nothing */
+        <div className="hx-empty">
+          <EmptyIcon />
+          <p className="hx-empty-title">No questions found matching your criteria.</p>
+          <p className="hx-empty-sub">Try changing filters or ask a new question.</p>
         </div>
       ) : (
-        <div className="history-list">
+        <div className="hx-list">
           {filtered.map((q) => (
-            <div key={q.question_id} className="history-card">
-              {/* Header row: tag badge + date */}
-              <div className="history-card-header">
+            <div key={q.question_id} className="hx-card">
+
+              {/* Card top: badge + date */}
+              <div className="hx-card-top">
                 <span
-                  className="history-tag"
+                  className="hx-tag-badge"
                   style={{
                     backgroundColor: tagColor(q.tag).bg,
                     color:           tagColor(q.tag).text,
@@ -183,20 +227,20 @@ export default function History() {
                 >
                   {q.tag}
                 </span>
-                <span className="history-date">{formatDate(q.created_at)}</span>
+                <span className="hx-card-date">{formatDate(q.created_at)}</span>
               </div>
 
               {/* Question text */}
-              <p className="history-text">{q.text}</p>
+              <p className="hx-card-text">{q.text}</p>
 
-              {/* Footer meta */}
-              <div className="history-meta">
-                <span>
-                  {q.similar_count} similar question
-                  {q.similar_count !== 1 ? "s" : ""} found
+              {/* Card footer: similar count + confidence */}
+              <div className="hx-card-footer">
+                <span className="hx-meta-item">
+                  <span className="hx-meta-dot" style={{ background: tagColor(q.tag).bar }} />
+                  {q.similar_count} similar question{q.similar_count !== 1 ? "s" : ""} found
                 </span>
-                <span>
-                  Tag confidence: {Math.round(q.tag_confidence * 100)}%
+                <span className="hx-meta-item">
+                  Tag confidence: <strong>{Math.round(q.tag_confidence * 100)}%</strong>
                 </span>
               </div>
             </div>
