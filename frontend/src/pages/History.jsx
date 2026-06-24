@@ -28,6 +28,11 @@ const TAGS = [
   "Computer Science",
   "History",
   "English",
+  "Geography",
+  "Economics",
+  "Environmental Science",
+  "General Knowledge",
+  "Other",
 ];
 
 function formatDate(isoString) {
@@ -224,6 +229,11 @@ export default function History() {
                     backgroundColor: tagColor(q.tag).bg,
                     color:           tagColor(q.tag).text,
                   }}
+                  title={
+                    q.tag === "Other"
+                      ? "No subject exceeded the confidence threshold."
+                      : undefined
+                  }
                 >
                   {q.tag}
                 </span>

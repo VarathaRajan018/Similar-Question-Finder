@@ -88,6 +88,31 @@ export const TAG_COLORS = {
     text: "#9D174D",
     bar:  "#EC4899",
   },
+  Geography: {
+    bg:   "#CCFBF1",
+    text: "#0F766E",
+    bar:  "#14B8A6",
+  },
+  Economics: {
+    bg:   "#FEF9C3",
+    text: "#854D0E",
+    bar:  "#EAB308",
+  },
+  "Environmental Science": {
+    bg:   "#DCFCE7",
+    text: "#166534",
+    bar:  "#16A34A",
+  },
+  "General Knowledge": {
+    bg:   "#E0E7FF",
+    text: "#3730A3",
+    bar:  "#6366F1",
+  },
+  Other: {
+    bg:   "#F3F4F6",
+    text: "#4B5563",
+    bar:  "#9CA3AF",
+  },
   // fallback
   _default: {
     bg:   "#E6F4EA",

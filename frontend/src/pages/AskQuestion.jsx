@@ -11,15 +11,21 @@ import { tagColor } from "../theme";
 
 function TagBadge({ tag, confidence }) {
   const { bg, text } = tagColor(tag);
+  const isOther = tag === "Other";
   return (
-    <span className="tag-badge" style={{ backgroundColor: bg, color: text }}>
-      {tag}
+    <span
+      className="tag-badge"
+      style={{ backgroundColor: bg, color: text }}
+      title={isOther ? "No subject exceeded the confidence threshold." : undefined}
+    >
+      {isOther ? "Auto-tagged as: Other" : `Auto-tagged as: ${tag}`}
       {confidence !== undefined && (
         <span className="tag-confidence"> {Math.round(confidence * 100)}%</span>
       )}
     </span>
   );
 }
+
 
 function SimilarCard({ question }) {
   const pct = Math.round(question.similarity * 100);

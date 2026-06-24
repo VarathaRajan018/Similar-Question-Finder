@@ -2,15 +2,10 @@
 embedding_service.py — ML Core for Similar Question Finder
 ==========================================================
 
-Switch from sentence-transformers (PyTorch, ~450 MB RAM) to fastembed
-(ONNX runtime, ~130 MB RAM) to fit Render's free-tier 512 MB limit.
+Uses fastembed (ONNX runtime, ~130 MB RAM) for Render free-tier compatibility.
+The same all-MiniLM-L6-v2 model is used via a pre-quantized ONNX file.
 
-The same all-MiniLM-L6-v2 model is used — fastembed downloads a
-pre-quantized ONNX version (~22 MB) instead of the full PyTorch weights.
-All public function signatures and return types are identical to the
-original; no changes are required in routes or tests.
-
-Design decisions (unchanged from original):
+Design decisions:
 
 1. WHY cosine similarity over Euclidean distance?
    Cosine similarity measures the *angle* between two vectors — it captures
@@ -26,16 +21,30 @@ Design decisions (unchanged from original):
    the same in-memory model — zero reload cost. The model is stateless after
    initialisation, so it is safe to call concurrently.
 
-3. WHY a similarity threshold (0.55)?
+3. WHY a similarity threshold (0.55) for question matching?
    Without a threshold, even a low-similarity pair (score ~0.40) would appear
    in results and confuse students. A threshold of 0.55 keeps only matches
    that are genuinely semantically close, eliminating false positives.
 
-4. WHY is assign_topic_tag real zero-shot classification (not keyword matching)?
+4. WHY a confidence threshold (0.45) for topic tagging?
+   Generic or ambiguous questions (e.g. "What is this?", "Why?") tend to
+   cluster near the centre of embedding space and can match any topic at
+   ~0.35-0.44 similarity. Forcing a topic label onto a low-confidence
+   question is worse than admitting uncertainty — so we return "Other"
+   when no topic exceeds 0.45. This prevents incorrect tagging.
+
+5. WHY is assign_topic_tag real zero-shot classification (not keyword matching)?
    We embed a *rich descriptive phrase* for each topic using the same neural
    model, then find which topic embedding is most similar to the question
    embedding. The model has never seen an explicit "Biology" → [keywords] rule.
    It generalises based on co-occurrence patterns learned during pre-training.
+
+6. WHY is "Other" not given its own embedding?
+   "Other" is a residual category, not a semantic concept. Giving it an
+   embedding would make it compete with real subjects and potentially absorb
+   legitimate questions. Instead, "Other" is assigned purely by threshold —
+   if the best subject score < CONFIDENCE_THRESHOLD, the question is
+   too ambiguous to classify and is labelled "Other".
 """
 
 from fastembed import TextEmbedding
@@ -45,44 +54,85 @@ from typing import List, Dict, Any
 # ---------------------------------------------------------------------------
 # Model initialisation — happens ONCE when this module is first imported.
 # fastembed downloads the quantized ONNX model (~22 MB) on first run and
-# caches it in ~/.cache/fastembed.  Subsequent starts load from disk in < 1s.
+# caches it in ~/.cache/fastembed. Subsequent starts load from disk in < 1s.
 # ---------------------------------------------------------------------------
 MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 _model = TextEmbedding(model_name=MODEL_NAME)
 
 # ---------------------------------------------------------------------------
+# Confidence threshold for topic tagging.
+# If the highest subject similarity score is below this value, the question
+# is too ambiguous to classify and is assigned the "Other" tag instead.
+# ---------------------------------------------------------------------------
+CONFIDENCE_THRESHOLD: float = 0.45
+
+# ---------------------------------------------------------------------------
 # Topic definitions — richer phrases give the model more context for
-# zero-shot tagging.  The description is embedded once at startup.
+# zero-shot tagging. The description is embedded once at startup and
+# cached. "Other" is intentionally excluded — it is a threshold fallback,
+# not a semantic concept.
 # ---------------------------------------------------------------------------
 TOPIC_DESCRIPTIONS: Dict[str, str] = {
     "Biology": (
         "Biology: living organisms, cells, genetics, DNA, evolution, "
-        "photosynthesis, ecosystems, anatomy, physiology, microbiology"
+        "photosynthesis, ecosystems, anatomy, physiology, microbiology, "
+        "biodiversity, reproduction, metabolism, classification of life"
     ),
     "Physics": (
         "Physics: mechanics, forces, energy, thermodynamics, electromagnetism, "
-        "waves, optics, quantum mechanics, relativity, motion"
+        "waves, optics, quantum mechanics, relativity, motion, gravity, "
+        "nuclear physics, particle physics, circuits, magnetism"
     ),
     "Chemistry": (
         "Chemistry: atoms, molecules, chemical reactions, periodic table, "
-        "acids, bases, organic chemistry, bonding, stoichiometry"
+        "acids, bases, organic chemistry, bonding, stoichiometry, "
+        "electrochemistry, thermochemistry, polymers, laboratory techniques"
     ),
     "Mathematics": (
         "Mathematics: algebra, calculus, geometry, trigonometry, statistics, "
-        "probability, number theory, equations, proofs, functions"
+        "probability, number theory, equations, proofs, functions, "
+        "matrices, vectors, sequences, integration, differentiation"
     ),
     "Computer Science": (
         "Computer Science: programming, algorithms, data structures, "
         "software engineering, databases, networks, operating systems, "
-        "machine learning, artificial intelligence"
+        "machine learning, artificial intelligence, cybersecurity, "
+        "web development, compilers, recursion, binary, sorting"
     ),
     "History": (
         "History: historical events, civilisations, wars, empires, revolutions, "
-        "ancient history, world history, timelines, culture, politics"
+        "ancient history, world history, timelines, culture, politics, "
+        "dynasties, colonialism, world wars, medieval, renaissance"
     ),
     "English": (
         "English: literature, grammar, writing, poetry, novels, reading "
-        "comprehension, essays, language, communication, vocabulary"
+        "comprehension, essays, language, communication, vocabulary, "
+        "punctuation, metaphor, narrative, Shakespeare, prose, rhetoric"
+    ),
+    "Geography": (
+        "Geography: countries, capitals, continents, oceans, mountains, rivers, "
+        "climate zones, maps, latitude, longitude, natural resources, "
+        "population, urbanisation, tectonic plates, weather patterns, "
+        "migration, landforms, physical geography, human geography"
+    ),
+    "Economics": (
+        "Economics: supply, demand, market, inflation, GDP, trade, fiscal policy, "
+        "monetary policy, microeconomics, macroeconomics, opportunity cost, "
+        "elasticity, competition, monopoly, taxation, interest rates, "
+        "recession, investment, budget, international trade, currency"
+    ),
+    "Environmental Science": (
+        "Environmental Science: climate change, global warming, pollution, "
+        "sustainability, renewable energy, carbon emissions, deforestation, "
+        "conservation, recycling, greenhouse gases, ozone layer, "
+        "biodiversity loss, ecology, natural disasters, water cycle, "
+        "fossil fuels, solar energy, environmental policy"
+    ),
+    "General Knowledge": (
+        "General knowledge: trivia, facts, current events, world records, "
+        "famous people, sports, entertainment, arts, culture, inventions, "
+        "discoveries, awards, geography facts, science facts, history facts, "
+        "miscellaneous, everyday life, general awareness, quiz"
     ),
 }
 
@@ -165,20 +215,34 @@ def find_similar_questions(
 
 def assign_topic_tag(new_embedding: List[float]) -> Dict[str, Any]:
     """
-    Zero-shot topic classification via embedding cosine similarity.
+    Confidence-threshold topic classification via embedding cosine similarity.
 
-    Compares *new_embedding* against each pre-computed topic embedding
-    and returns the best-matching topic name plus its confidence score.
+    Compares *new_embedding* against each pre-computed topic embedding and
+    returns the best-matching topic name plus its raw confidence score.
 
-    This is genuine zero-shot classification: no if/else, no keyword list —
-    the model's internal representation determines the closest topic purely
-    from semantic meaning.
+    Confidence threshold (CONFIDENCE_THRESHOLD = 0.45):
+    ────────────────────────────────────────────────────
+    If the highest similarity score across all subjects is below the threshold,
+    the topic is set to "Other" — meaning the question is too ambiguous or
+    general for confident subject classification. The confidence score returned
+    is still the raw best score so the frontend can show e.g. "Other (34%)".
+
+    This prevents incorrect forced tagging on generic questions like
+    "What is this?" or "Why does it happen?".
     """
     vec = np.array(new_embedding, dtype=np.float32)
-    # Dot product with all topic vectors at once (vectorised, fast)
+    # Vectorised dot product against all topic embeddings — O(n_topics * dim)
     scores: np.ndarray = _topic_embeddings @ vec          # shape: (n_topics,)
     best_idx: int = int(np.argmax(scores))
+    best_score: float = round(float(scores[best_idx]), 4)
+
+    # Apply confidence threshold — fall back to "Other" if too uncertain
+    if best_score < CONFIDENCE_THRESHOLD:
+        tag = "Other"
+    else:
+        tag = _topic_names[best_idx]
+
     return {
-        "tag": _topic_names[best_idx],
-        "confidence": round(float(scores[best_idx]), 4),
+        "tag": tag,
+        "confidence": best_score,   # raw best score regardless of "Other" fallback
     }
