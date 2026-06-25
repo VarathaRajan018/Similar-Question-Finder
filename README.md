@@ -11,6 +11,17 @@ A web application where students type study questions and instantly receive:
 
 ---
 
+## 🚀 Live Demo
+
+| Service | URL |
+|---|---|
+| **Frontend** (Vercel) | [https://similar-question-finder.vercel.app/](https://similar-question-finder.vercel.app/) |
+| **Backend** (Render) | [https://similar-question-finder-budo.onrender.com/](https://similar-question-finder-budo.onrender.com/) |
+
+> **Note:** The Render free tier spins down after inactivity — the first request may take ~30 seconds to wake up.
+
+---
+
 ## Tech Stack
 
 | Layer | Technology |
@@ -144,12 +155,16 @@ the same stateless, thread-safe model instance at zero marginal cost.
 
 ### Backend (Render)
 
+**Deployed at:** [https://similar-question-finder-budo.onrender.com/](https://similar-question-finder-budo.onrender.com/)
+
 1. Create a **Web Service** on [render.com](https://render.com).
 2. Set **Build Command**: `pip install -r requirements.txt`
 3. Set **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
 4. Add environment variables from `backend/.env.example`.
 
 ### Frontend (Vercel)
+
+**Deployed at:** [https://similar-question-finder.vercel.app/](https://similar-question-finder.vercel.app/)
 
 1. Push `frontend/` to GitHub.
 2. Import the repository on [vercel.com](https://vercel.com).
